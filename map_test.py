@@ -1,5 +1,6 @@
 import math
 import folium
+import time
 
 # Başlangıç konumu: Gölbaşı, Ankara
 current_latitude = 39.7849
@@ -20,11 +21,17 @@ folium.Marker([current_latitude, current_longitude],
 folium.Marker([target_latitude, target_longitude],
               tooltip='Hedef Konumu: İncek', icon=folium.Icon(color='red')).add_to(my_map)
 
+# Rota çizimi için bir liste
+route = [(current_latitude, current_longitude)]
+
 
 def update_current_location(new_latitude, new_longitude):
     global current_latitude, current_longitude
     current_latitude = new_latitude
     current_longitude = new_longitude
+    route.append((current_latitude, current_longitude))
+    # Haritada rotayı çiz
+    folium.PolyLine(locations=route, color='blue').add_to(my_map)
 
 
 def haversine_distance(lat1, lon1, lat2, lon2):
@@ -49,41 +56,28 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     return bearing
 
 
-def move_robot(left_motor_speed, right_motor_speed):
+def move_robot():
     global current_latitude, current_longitude
-    distance_travelled = 0.001  # her adımda gidilen mesafe
-    angle = math.radians(calculate_bearing(
-        current_latitude, current_longitude, target_latitude, target_longitude))
-    current_latitude += distance_travelled * math.cos(angle)
-    current_longitude += distance_travelled * math.sin(angle)
-    update_current_location(current_latitude, current_longitude)
-    folium.CircleMarker(location=[
-                        current_latitude, current_longitude], radius=2, color='blue').add_to(my_map)
-
-
-def navigate_to_target():
     while True:
         distance = haversine_distance(
             current_latitude, current_longitude, target_latitude, target_longitude)
         if distance < 0.01:
             print("Hedefe ulaşıldı!")
-            move_robot(0, 0)
             break
 
         bearing = calculate_bearing(
             current_latitude, current_longitude, target_latitude, target_longitude)
 
-        left_motor_speed = 100 - bearing
-        right_motor_speed = 100 + bearing
+        distance_travelled = 0.001  # her adımda gidilen mesafe
+        angle = math.radians(bearing)
+        current_latitude += distance_travelled * math.cos(angle)
+        current_longitude += distance_travelled * math.sin(angle)
+        update_current_location(current_latitude, current_longitude)
+        time.sleep(0.1)  # Simülasyonun hızını kontrol eder
 
-        left_motor_speed = max(-100, min(100, left_motor_speed))
-        right_motor_speed = max(-100, min(100, right_motor_speed))
 
-        move_robot(left_motor_speed, right_motor_speed)
-
-
-# Robotu hedefe götür
-navigate_to_target()
+# Robotu hareket ettir ve rotayı güncelle
+move_robot()
 
 # Haritayı HTML dosyasına kaydet
-my_map.save("robot_simulation.html")
+my_map.save("robot_route.html")
