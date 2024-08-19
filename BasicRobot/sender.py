@@ -1,6 +1,7 @@
 # sender.py
 import socket
 
+import command_maker
 class UDPSender:
     def __init__(self, server_ip='127.0.0.1', server_port=5005):
         self.server_ip = server_ip
@@ -18,6 +19,15 @@ class UDPSender:
             print(f"Received response: {data.decode()} from {addr}")
         except socket.timeout:
             print("No response received within the timeout period.")
+
+    def send_byte_message(self, message_bytes):
+        """Send a message to the UDP server."""
+        if not isinstance(message_bytes, bytes):
+            raise ValueError("Message must be a bytes object")
+        
+        self.client_socket.sendto(message_bytes, (self.server_ip, self.server_port))
+        print(f"Sent byte message: {command_maker.RobotCommandMaker.get_message_with_dashes(message_bytes)} to {self.server_ip}:{self.server_port}")
+
 
     def close(self):
         """Close the UDP client socket."""
