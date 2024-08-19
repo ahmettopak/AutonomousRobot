@@ -1,9 +1,10 @@
 import math
-import time 
+import time
 
 class RobotNavigation:
     max_speed = 33
     min_speed = -33
+    tolerance = 0.01  # Mesafe toleransı
 
     def __init__(self, gps_module, network_communication):
         self.gps_module = gps_module
@@ -28,54 +29,45 @@ class RobotNavigation:
         bearing = (bearing + 360) % 360
         return bearing
 
-    def navigate_to_target(self ,target_latitude, target_longitude):
-        self.target_latitude =target_latitude
-        self.target_longitude = target_longitude
-        while True:
+    def calculate_turn_speed(self, bearing_difference):
+        # Basit bir kontrol stratejisi
+        # Bu hesaplamalar, hedefe yönelirken robotun dönüş hızlarını belirler.
+        if bearing_difference > 10:
+            left_motor_speed = 20
+            right_motor_speed = -20
+        elif bearing_difference < -10:
+            left_motor_speed = -20
+            right_motor_speed = 20
+        else:
+            left_motor_speed = 20
+            right_motor_speed = 20
+        return left_motor_speed, right_motor_speed
 
+    def navigate_to_target(self, target_latitude, target_longitude):
+        self.target_latitude = target_latitude
+        self.target_longitude = target_longitude
+
+        while True:
             current_latitude, current_longitude = self.gps_module.get_current_location()
             distance = self.haversine_distance(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
-            if distance < 0.01:
+            
+            if distance < self.tolerance:
                 print("Hedefe ulaşıldı!")
                 self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
                 self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
                 break
 
-            bearing = self.calculate_bearing(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
-            left_motor_speed = self.max_speed - bearing
-            right_motor_speed = self.max_speed + bearing
+            target_bearing = self.calculate_bearing(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
+            current_bearing = self.calculate_bearing(current_latitude, current_longitude, current_latitude, current_longitude)  # Bu örnek, mevcut yönü hesaplamak için bir yer tutucudur.
 
+            bearing_difference = target_bearing - current_bearing
+            left_motor_speed, right_motor_speed = self.calculate_turn_speed(bearing_difference)
+
+            # Motor hızlarını sınırlandır
             left_motor_speed = max(self.min_speed, min(self.max_speed, left_motor_speed))
             right_motor_speed = max(self.min_speed, min(self.max_speed, right_motor_speed))
 
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
-            
-            time.sleep(0.1)  # Increased sleep interval for stability
 
-    def basic_navigate_to_target(self):
-        while True:
-            current_latitude, current_longitude = self.gps_module.get_current_location()
-            distance = self.haversine_distance(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
-            if distance < 0.01:
-                print("Hedefe ulaşıldı!")
-                self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
-                self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
-                break
-
-            bearing = self.calculate_bearing(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
-
-            if bearing > 10:
-                left_motor_speed = 50
-                right_motor_speed = -50
-            elif bearing < -10:
-                left_motor_speed = -50
-                right_motor_speed = 50
-            else:
-                left_motor_speed = 100
-                right_motor_speed = 100
-
-            self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
-            self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
-
-            time.sleep(0.1)  # Increased sleep interval for stability
+            time.sleep(0.1)  # Stabilite için uyuma süresi
