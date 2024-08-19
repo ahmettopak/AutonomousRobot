@@ -1,10 +1,10 @@
 class RobotCommandMaker:
 
-    R = 0x43
-    C = 0x52
+    R = 0x52
+    C = 0x43
     
-    DIR_POSITIVE = 0x01
-    DIR_NEGATIVE = 0x00
+    DIR_POSITIVE = 0x00
+    DIR_NEGATIVE = 0x01
 
     LEFT_MOTOR_SPEED_ID = 0xA4
     RIGHT_MOTOR_SPEED_ID = 0x84
@@ -56,7 +56,7 @@ class RobotCommandMaker:
         else:
             data0 = self.DIR_NEGATIVE
         
-        data1 = abs(speed)
+        data1 = abs(int(speed))
 
         return self.create_command(motor_id, data0, data1)
 

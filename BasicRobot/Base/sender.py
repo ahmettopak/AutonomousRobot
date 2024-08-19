@@ -1,7 +1,7 @@
 # sender.py
 import socket
 
-import command_maker
+import Base.command_maker as command_maker
 class UDPSender:
     def __init__(self, server_ip='127.0.0.1', server_port=5005):
         self.server_ip = server_ip
