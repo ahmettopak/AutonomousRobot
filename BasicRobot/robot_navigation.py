@@ -2,9 +2,12 @@ import math
 import time
 
 class RobotNavigation:
-    max_speed = 33
-    min_speed = -33
-    tolerance = 0.01  # Mesafe toleransı
+    max_speed = 100
+    min_speed = -100
+
+    autonomous_max_speed = 33
+    autonomous_min_speed = -33
+    autonomous_finish_tolerance = 0.01  
 
     def __init__(self, gps_module, network_communication):
         self.gps_module = gps_module
@@ -51,7 +54,7 @@ class RobotNavigation:
             current_latitude, current_longitude = self.gps_module.get_current_location()
             distance = self.haversine_distance(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
             
-            if distance < self.tolerance:
+            if distance < self.autonomous_finish_tolerance:
                 print("Hedefe ulaşıldı!")
                 self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
                 self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
@@ -64,10 +67,38 @@ class RobotNavigation:
             left_motor_speed, right_motor_speed = self.calculate_turn_speed(bearing_difference)
 
             # Motor hızlarını sınırlandır
-            left_motor_speed = max(self.min_speed, min(self.max_speed, left_motor_speed))
-            right_motor_speed = max(self.min_speed, min(self.max_speed, right_motor_speed))
+            left_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, left_motor_speed))
+            right_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, right_motor_speed))
 
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
 
             time.sleep(0.1)  # Stabilite için uyuma süresi
+
+    def drive_by_speed(self, left_speed, right_speed):
+        # Motor hızlarını sınırlandır
+        left_speed = max(self.min_speed, min(self.max_speed, left_speed))
+        right_speed = max(self.min_speed, min(self.max_speed, right_speed))
+        
+        self.network_communication.send_byte_message(
+            self.network_communication.command_maker.create_speed_command(
+                self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_speed))
+        self.network_communication.send_byte_message(
+            self.network_communication.command_maker.create_speed_command(
+                self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_speed))
+
+    def drive_by_joystick(self, x, y):
+        # Joystick verilerini kullanarak motor hızlarını hesapla
+        max_speed = self.max_speed
+        min_speed = self.min_speed
+
+        # Joystick x ve y verilerine göre motor hızlarını hesapla
+        left_speed = y + x
+        right_speed = y - x
+
+        # Motor hızlarını sınırlandır
+        left_speed = max(min_speed, min(max_speed, left_speed))
+        right_speed = max(min_speed, min(max_speed, right_speed))
+
+        # Motorları kontrol et
+        self.drive_by_speed(left_speed, right_speed)

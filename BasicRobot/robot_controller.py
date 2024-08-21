@@ -20,6 +20,10 @@ class RobotController:
 
     def navigate(self ,target_latitude, target_longitude):
         self.robot_navigation.navigate_to_target(target_latitude, target_longitude)
-        # or
-        # self.robot_navigation.basic_navigate_to_target()
+        
+    def drive_robot_by_joystick(self ,x, y):
+        self.robot_navigation.drive_by_joystick(x, y)
 
+    def drive_robot_by_speed(self ,left_motor_speed, right_motor_speed):
+        self.robot_navigation.drive_by_speed(left_motor_speed, right_motor_speed)
+        
