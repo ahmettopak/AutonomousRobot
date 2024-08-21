@@ -1,11 +1,13 @@
 import threading
-from gps_module import GPSModule
+from gps_module import GPSModule , GPSType
 from network_communication import NetworkCommunication
 from robot_navigation import RobotNavigation
 
 class RobotController:
+    gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
+
     def __init__(self):
-        self.gps_module = GPSModule()
+        self.gps_module = GPSModule(gps_type=self.gps_type)
         self.network_communication = NetworkCommunication()
         self.robot_navigation = RobotNavigation(self.gps_module, self.network_communication)
         self.gps_thread = threading.Thread(target=self.gps_module.read_gps_data, daemon=True)

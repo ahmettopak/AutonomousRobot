@@ -184,17 +184,17 @@ class GPSModule:
     def get_current_location(self) -> Tuple[float, float]:
         return self.current_latitude, self.current_longitude
 
-# Örnek kullanım
-if __name__ == "__main__":
-    # GPS türünü belirleme
-    gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
+# # Örnek kullanım
+# if __name__ == "__main__":
+#     # GPS türünü belirleme
+#     gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
 
-    # GPS modülünü oluşturma
-    gps_module = GPSModule(gps_type)
+#     # GPS modülünü oluşturma
+#     gps_module = GPSModule(gps_type)
 
-    # GPS verilerini okuma (bu işlemi sürekli olarak yapacak)
-    try:
-        while True:
-            gps_module.read_gps_data()
-    except KeyboardInterrupt:
-        print("GPS okuma durduruldu.")
+#     # GPS verilerini okuma (bu işlemi sürekli olarak yapacak)
+#     try:
+#         while True:
+#             gps_module.read_gps_data()
+#     except KeyboardInterrupt:
+#         print("GPS okuma durduruldu.")
