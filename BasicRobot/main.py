@@ -14,6 +14,5 @@ if __name__ == "__main__":
             right_y = gamepad.get_axis(Axis.RIGHT_Y)
 
             robot_controller.drive_robot_by_joystick(right_x , right_y)
-            print(left_x)
     finally:
         robot_controller.stop()

@@ -26,7 +26,7 @@ class UDPSender:
             raise ValueError("Message must be a bytes object")
         
         self.client_socket.sendto(message_bytes, (self.server_ip, self.server_port))
-        print(f"Sent byte message: {command_maker.RobotCommandMaker.get_message_with_dashes(message_bytes)} to {self.server_ip}:{self.server_port}")
+       # print(f"Sent byte message: {command_maker.RobotCommandMaker.get_message_with_dashes(message_bytes)} to {self.server_ip}:{self.server_port}")
 
 
     def close(self):
