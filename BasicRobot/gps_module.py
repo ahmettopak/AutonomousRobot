@@ -31,19 +31,24 @@ class GPSModule:
         }
         return baud_rates.get(gps_type, 115200)  # Varsayılan olarak 115200
 
-    def _parse_gpgga(self, sentence: str) -> Tuple[Optional[float], Optional[float]]:
+    def _parse_gpgga(self , sentence: str) -> Tuple[Optional[float], Optional[float]]:
         parts = sentence.split(',')
+        
         if len(parts) < 7:
             return None, None
+        
         try:
-            latitude = float(parts[2])
-            longitude = float(parts[4])
+            # Parse latitude and longitude values from the sentence
+            lat_str = parts[2]
+            lon_str = parts[4]
             lat_dir = parts[3]
             lon_dir = parts[5]
 
-            latitude = latitude / 100.0
-            longitude = longitude / 100.0
+            # Convert latitude and longitude to float and correct them
+            latitude = float(lat_str[:2]) + float(lat_str[2:]) / 60.0
+            longitude = float(lon_str[:3]) + float(lon_str[3:]) / 60.0
 
+            # Adjust latitude and longitude based on their direction
             if lat_dir == 'S':
                 latitude = -latitude
             if lon_dir == 'W':
@@ -52,6 +57,7 @@ class GPSModule:
             return latitude, longitude
         except ValueError:
             return None, None
+
 
     def _parse_gngrmc(self, sentence: str) -> Tuple[Optional[float], Optional[float]]:
         parts = sentence.split(',')
@@ -84,14 +90,34 @@ class GPSModule:
             print(f"Parse error: {e}")
             return None
 
-    def manual_parse_gga(self, sentence: str) -> Tuple[Optional[float], Optional[float]]:
+    def manual_parse_gga(self , sentence: str) -> Tuple[Optional[float], Optional[float]]:
         parts = sentence.split(',')
         if len(parts) >= 6:
-            latitude = parts[2]
-            longitude = parts[4]
-            return latitude, longitude
-        return None, None
+            try:
+                lat = float(parts[2])
+                lat_dir = parts[3]
+                lon = float(parts[4])
+                lon_dir = parts[5]
 
+                # Convert latitude
+                lat_deg = int(lat / 100)
+                lat_min = lat % 100
+                latitude = lat_deg + (lat_min / 60)
+                if lat_dir == 'S':
+                    latitude = -latitude
+
+                # Convert longitude
+                lon_deg = int(lon / 100)
+                lon_min = lon % 100
+                longitude = lon_deg + (lon_min / 60)
+                if lon_dir == 'W':
+                    longitude = -longitude
+
+                return latitude, longitude
+            except ValueError as e:
+                print(f"Value error: {e}")
+                return None, None
+        return None, None
     
     
     def handle_parsed_message(self, msg):
@@ -158,6 +184,9 @@ class GPSModule:
             latitude, longitude = None, None
             while True:
                 line = ser.readline().decode('ascii', errors='ignore').strip()
+
+               
+
                 if self.gps_type == GPSType.GARMIN:
                     latitude, longitude = self._parse_gpgga(line)
                 elif self.gps_type == GPSType.RADIOLINK:
@@ -185,18 +214,3 @@ class GPSModule:
 
     def get_current_location(self) -> Tuple[float, float]:
         return self.current_latitude, self.current_longitude
-
-# # Örnek kullanım
-# if __name__ == "__main__":
-#     # GPS türünü belirleme
-#     gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
-
-#     # GPS modülünü oluşturma
-#     gps_module = GPSModule(gps_type)
-
-#     # GPS verilerini okuma (bu işlemi sürekli olarak yapacak)
-#     try:
-#         while True:
-#             gps_module.read_gps_data()
-#     except KeyboardInterrupt:
-#         print("GPS okuma durduruldu.")
