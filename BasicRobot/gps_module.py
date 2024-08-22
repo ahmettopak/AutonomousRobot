@@ -24,7 +24,9 @@ class GPSModule:
         # GPS modül türüne göre baud rate ayarları
         baud_rates = {
             GPSType.GARMIN: 115200,
-            GPSType.RADIOLINK: 9600
+            GPSType.RADIOLINK: 9600,
+            GPSType.UNKNOWN: 9600
+
             # Diğer GPS modülleri için baud rate ayarları buraya eklenebilir
         }
         return baud_rates.get(gps_type, 115200)  # Varsayılan olarak 115200

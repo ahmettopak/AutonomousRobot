@@ -4,7 +4,7 @@ from network_communication import NetworkCommunication
 from robot_navigation import RobotNavigation
 
 class RobotController:
-    gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
+    gps_type = GPSType.UNKNOWN  # veya GPSType.GARMIN
 
     def __init__(self):
         self.gps_module = GPSModule(gps_type=self.gps_type)
