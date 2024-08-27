@@ -198,7 +198,7 @@ class GPSModule:
                         # Special handling for unsupported sentences
                         if line.startswith('$GNGGA'):
                             lat, lon = self.manual_parse_gga(line)
-                            print(f"Manual GGA - Lat: {lat}, Lon: {lon}")
+                            #print(f"Manual GGA - Lat: {lat}, Lon: {lon}")
                         else:
                          #   print(f"Unhandled sentence: {line}")
                             pass

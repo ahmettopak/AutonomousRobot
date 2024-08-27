@@ -40,15 +40,11 @@ class RobotController:
         except asyncio.CancelledError:
             pass
 
-    async def _read_gps_data(self):
-        while True:
-            await self.gps_module.read_gps_data()
-            await asyncio.sleep(1)  # GPS verilerini okuma sıklığı
-
-    async def _read_imu_data(self):
-        while True:
-            await self.imu_module.read_imu_data()
-            await asyncio.sleep(1)  # IMU verilerini okuma sıklığı
+    async def _read_gps_data(self):    
+        await self.gps_module.read_gps_data()
+        
+    async def _read_imu_data(self): 
+        await self.imu_module.read_imu_data()
 
     async def navigate(self, target_latitude, target_longitude):
         await self.robot_navigation.navigate_to_target(target_latitude, target_longitude)

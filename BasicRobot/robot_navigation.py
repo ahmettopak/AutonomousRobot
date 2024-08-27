@@ -76,11 +76,13 @@ class RobotNavigation:
             left_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, left_motor_speed))
             right_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, right_motor_speed))
 
-            await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
-            await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
+            #await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
+            #await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
 
             data_to_send = f"{current_latitude},{current_longitude},{current_bearing}"
-            await self.web_socket_client.send_data(data_to_send)
+            #await self.web_socket_client.send_data(data_to_send)
+            print(f"Robot- Lat: {current_latitude}, Lon: {current_longitude}")
+
 
             await asyncio.sleep(0.1)  # Sleep for stability
 
