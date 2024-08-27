@@ -1,7 +1,7 @@
 import math
-import time
+import asyncio
 
-from gps_module import GPSModule , GPSType
+from gps_module import GPSModule, GPSType
 from network_communication import NetworkCommunication
 from imu_module import IMUModule
 from web_socket_client import WebSocketClient
@@ -14,12 +14,10 @@ class RobotNavigation:
     autonomous_min_speed = -33
     autonomous_finish_tolerance = 0.01  
 
-    def __init__(self,web_socket_client: WebSocketClient,  gps_module: GPSModule, imu_module: IMUModule ,network_communication: NetworkCommunication):
-       
+    def __init__(self, web_socket_client: WebSocketClient, gps_module: GPSModule, imu_module: IMUModule, network_communication: NetworkCommunication):
         self.web_socket_client = web_socket_client
         self.gps_module = gps_module
         self.imu_module = imu_module
-
         self.network_communication = network_communication
         self.target_latitude = 39.47566589
         self.target_longitude = 32.4113875
@@ -42,8 +40,7 @@ class RobotNavigation:
         return bearing
 
     def calculate_turn_speed(self, bearing_difference):
-        # Basit bir kontrol stratejisi
-        # Bu hesaplamalar, hedefe yönelirken robotun dönüş hızlarını belirler.
+        # Simple control strategy
         if bearing_difference > 10:
             left_motor_speed = 20
             right_motor_speed = -20
@@ -55,7 +52,7 @@ class RobotNavigation:
             right_motor_speed = 20
         return left_motor_speed, right_motor_speed
 
-    def navigate_to_target(self, target_latitude, target_longitude):
+    async def navigate_to_target(self, target_latitude, target_longitude):
         self.target_latitude = target_latitude
         self.target_longitude = target_longitude
 
@@ -64,9 +61,9 @@ class RobotNavigation:
             distance = self.haversine_distance(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
             
             if distance < self.autonomous_finish_tolerance:
-                print("Hedefe ulaşıldı!")
-                self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
-                self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
+                print("Reached target!")
+                await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
+                await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
                 break
 
             target_bearing = self.calculate_bearing(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
@@ -75,43 +72,38 @@ class RobotNavigation:
             bearing_difference = target_bearing - current_bearing
             left_motor_speed, right_motor_speed = self.calculate_turn_speed(bearing_difference)
 
-            # Motor hızlarını sınırlandır
+            # Constrain motor speeds
             left_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, left_motor_speed))
             right_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, right_motor_speed))
 
-            self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
-            self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
+            await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
+            await self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
 
             data_to_send = f"{current_latitude},{current_longitude},{current_bearing}"
+            await self.web_socket_client.send_data(data_to_send)
 
-            self.web_socket_client.send_data("data_to_send")
+            await asyncio.sleep(0.1)  # Sleep for stability
 
-            time.sleep(0.1)  # Stabilite için uyuma süresi
-
-    def drive_by_speed(self, left_speed, right_speed):
-        # Motor hızlarını sınırlandır
+    async def drive_by_speed(self, left_speed, right_speed):
+        # Constrain motor speeds
         left_speed = max(self.min_speed, min(self.max_speed, left_speed))
         right_speed = max(self.min_speed, min(self.max_speed, right_speed))
         
-        self.network_communication.send_byte_message(
+        await self.network_communication.send_byte_message(
             self.network_communication.command_maker.create_speed_command(
                 self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_speed))
-        self.network_communication.send_byte_message(
+        await self.network_communication.send_byte_message(
             self.network_communication.command_maker.create_speed_command(
                 self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_speed))
 
-    def drive_by_joystick(self, x, y):
-        # Joystick verilerini kullanarak motor hızlarını hesapla
-        max_speed = self.max_speed
-        min_speed = self.min_speed
-
-        # Joystick x ve y verilerine göre motor hızlarını hesapla
+    async def drive_by_joystick(self, x, y):
+        # Calculate motor speeds based on joystick data
         left_speed = y + x
         right_speed = y - x
 
-        # Motor hızlarını sınırlandır
-        left_speed = max(min_speed, min(max_speed, left_speed))
-        right_speed = max(min_speed, min(max_speed, right_speed))
+        # Constrain motor speeds
+        left_speed = max(self.min_speed, min(self.max_speed, left_speed))
+        right_speed = max(self.min_speed, min(self.max_speed, right_speed))
 
-        # Motorları kontrol et
-        self.drive_by_speed(left_speed, right_speed)
+        # Control motors
+        await self.drive_by_speed(left_speed, right_speed)
