@@ -9,10 +9,13 @@ class GPSType(Enum):
     UNKNOWN = auto()
 
 
+
 SERIAL_PORT = '/dev/ttyUSB0'  # Bu portu gerçek cihazınıza göre ayarlayın
 
 # GPS modülü sınıfı
 class GPSModule:
+
+
     def __init__(self, gps_type: GPSType):
         self.current_latitude = 0.0
         self.current_longitude = 0.0
@@ -185,13 +188,11 @@ class GPSModule:
             while True:
                 line = ser.readline().decode('ascii', errors='ignore').strip()
 
-               
-
                 if self.gps_type == GPSType.GARMIN:
                     latitude, longitude = self._parse_gpgga(line)
                 elif self.gps_type == GPSType.RADIOLINK:
                     parsed_msg = self.parse_nmea_sentence(line)
-                    if parsed_msg:
+                    if False:
                         self.handle_parsed_message(parsed_msg)
                     else:
                         # Special handling for unsupported sentences
@@ -199,7 +200,8 @@ class GPSModule:
                             lat, lon = self.manual_parse_gga(line)
                             print(f"Manual GGA - Lat: {lat}, Lon: {lon}")
                         else:
-                            print(f"Unhandled sentence: {line}")
+                         #   print(f"Unhandled sentence: {line}")
+                            pass
                 else:
                     print(f"{self.gps_type} not parse data. Data: {line}")
                     continue

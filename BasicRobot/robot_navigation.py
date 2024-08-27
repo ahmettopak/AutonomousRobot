@@ -1,6 +1,11 @@
 import math
 import time
 
+from gps_module import GPSModule , GPSType
+from network_communication import NetworkCommunication
+from imu_module import IMUModule
+from web_socket_client import WebSocketClient
+
 class RobotNavigation:
     max_speed = 100
     min_speed = -100
@@ -9,8 +14,12 @@ class RobotNavigation:
     autonomous_min_speed = -33
     autonomous_finish_tolerance = 0.01  
 
-    def __init__(self, gps_module, network_communication):
+    def __init__(self,web_socket_client: WebSocketClient,  gps_module: GPSModule, imu_module: IMUModule ,network_communication: NetworkCommunication):
+       
+        self.web_socket_client = web_socket_client
         self.gps_module = gps_module
+        self.imu_module = imu_module
+
         self.network_communication = network_communication
         self.target_latitude = 39.47566589
         self.target_longitude = 32.4113875
@@ -61,7 +70,7 @@ class RobotNavigation:
                 break
 
             target_bearing = self.calculate_bearing(current_latitude, current_longitude, self.target_latitude, self.target_longitude)
-            current_bearing = self.calculate_bearing(current_latitude, current_longitude, current_latitude, current_longitude)  # Bu örnek, mevcut yönü hesaplamak için bir yer tutucudur.
+            current_bearing = self.imu_module.get_heading()
 
             bearing_difference = target_bearing - current_bearing
             left_motor_speed, right_motor_speed = self.calculate_turn_speed(bearing_difference)
@@ -72,6 +81,10 @@ class RobotNavigation:
 
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
             self.network_communication.send_byte_message(self.network_communication.command_maker.create_speed_command(self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
+
+            data_to_send = f"{current_latitude},{current_longitude},{current_bearing}"
+
+            self.web_socket_client.send_data("data_to_send")
 
             time.sleep(0.1)  # Stabilite için uyuma süresi
 

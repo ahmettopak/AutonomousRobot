@@ -12,7 +12,7 @@ if __name__ == "__main__":
             left_y = gamepad.get_axis(Axis.LEFT_Y)
             right_x = gamepad.get_axis(Axis.RIGHT_X)
             right_y = gamepad.get_axis(Axis.RIGHT_Y)
-
-           # robot_controller.drive_robot_by_joystick(right_x , right_y)
+            robot_controller.navigate(5,3)
+            #robot_controller.drive_robot_by_joystick(right_x , right_y)
     finally:
         robot_controller.stop()
