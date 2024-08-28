@@ -23,7 +23,7 @@ async def main():
         # Program kesildiğinde robotu durdurma
         pass
     finally:
-        await robot_controller.stop()
+        robot_controller.stop()
 
 # Asenkron fonksiyonu çalıştır
 asyncio.run(main())

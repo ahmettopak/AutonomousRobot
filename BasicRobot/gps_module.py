@@ -10,7 +10,7 @@ class GPSType(Enum):
 
 
 
-SERIAL_PORT = '/dev/ttyUSB0'  # Bu portu gerçek cihazınıza göre ayarlayın
+SERIAL_PORT = '/dev/ttyUSB1'  # Bu portu gerçek cihazınıza göre ayarlayın
 
 # GPS modülü sınıfı
 class GPSModule:

@@ -14,16 +14,33 @@ class RobotController:
         self.imu_module = IMUModule()
         self.client = WebSocketClient(self.uri)
         self.network_communication = NetworkCommunication()
+<<<<<<< HEAD
         self.robot_navigation = RobotNavigation(self.client, self.gps_module, self.imu_module, self.network_communication)
 
     async def start(self):
         await self.client.connect()
         await self.network_communication.start_server()
+=======
+        self.robot_navigation = RobotNavigation(self.client , self.gps_module, self.imu_module , self.network_communication)
+        self.gps_thread = threading.Thread(target=self.gps_module.read_gps_data, daemon=True)
+        self.imu_thread = threading.Thread(target=self.imu_module.read_imu_data, daemon=True)
+        self.web_socket_send_thread = threading.Thread(target=self.send_gps_data2robot, daemon=True)
+        self.web_socket_receive_thread = threading.Thread(target=self.receive_gps_data2robot, daemon=True)
+
+    def start(self):
+        self.client.connect()
+        self.network_communication.start_server()
+        self.gps_thread.start()
+        self.imu_thread.start()
+        self.web_socket_send_thread.start()
+        self.web_socket_receive_thread.start()
+>>>>>>> a0de270 (Web Socket exception handled)
 
         # Verileri sürekli okumak için asenkron görevler başlatma
         self.gps_task = asyncio.create_task(self._read_gps_data())
         self.imu_task = asyncio.create_task(self._read_imu_data())
 
+<<<<<<< HEAD
     async def stop(self):
         await self.network_communication.stop_server()
         await self.network_communication.close()
@@ -39,6 +56,66 @@ class RobotController:
             await self.imu_task
         except asyncio.CancelledError:
             pass
+=======
+    def stop(self):
+
+        # Wait for threads to finish
+        self.gps_thread.join()
+        self.imu_thread.join()
+        self.web_socket_send_thread.join()
+        self.web_socket_receive_thread.join()
+        
+        # Stop network communication
+        self.network_communication.stop_server()
+        self.network_communication.close()
+        
+        # Disconnect WebSocket
+        self.client.close()
+
+    def send_gps_data2robot(self):
+        while(True):
+            current_latitude, current_longitude = self.gps_module.get_current_location()
+
+            data_to_send = f"{current_latitude},{current_longitude},{self.imu_module.get_heading()}"
+
+            self.client.send_data(data_to_send)
+
+            time.sleep(1)
+
+    def receive_gps_data2robot(self):
+        while True:
+            
+            
+            # Veriyi işleme
+            try:
+                response = self.client.receive_data()
+            
+                # Byte dizisini string'e dönüştür
+                response_str = response.decode('utf-8')
+                
+                data_parts = response_str.split(',')
+                
+                latitude = float(data_parts[0])
+                longitude = float(data_parts[1])
+                heading = float(data_parts[2])
+                
+                print(f"RCU Latitude: {latitude} , Longitude: {longitude} , Heading: {heading}")
+         
+
+            except (IndexError, ValueError) as e:
+                print(f"Error processing data: {e}")
+                
+            time.sleep(0.1)
+
+    def navigate(self ,target_latitude, target_longitude):
+        self.robot_navigation.navigate_to_target(target_latitude, target_longitude)
+        
+    def stop_navigation(self ,target_latitude, target_longitude):
+        self.robot_navigation.stop_navigation()
+        
+    def drive_robot_by_joystick(self ,x, y):
+        self.robot_navigation.drive_by_joystick(x, y)
+>>>>>>> a0de270 (Web Socket exception handled)
 
     async def _read_gps_data(self):    
         await self.gps_module.read_gps_data()

@@ -1,6 +1,6 @@
 import serial
 
-SERIAL_PORT = '/dev/ttyACM0'
+SERIAL_PORT = '/dev/ttyUSB0'
 BAUD_RATE = 115200
 
 class IMUModule:
@@ -19,6 +19,8 @@ class IMUModule:
                         if len(data) == 2:
                             self.heading = float(data[0])
                             self.speed = float(data[1])
+                        
+                            print(f"Heading: {self.heading:.2f}°, Speed: {self.speed:.2f} m/s")
                     except ValueError:
                         # Verinin doğru formatta olup olmadığını kontrol et
                         print("Hatalı veri formatı:", line)
@@ -28,3 +30,21 @@ class IMUModule:
 
     def get_speed(self):
         return self.speed
+    
+
+
+# def main():
+#     imu = IMUModule()
+
+#     print("IMU verilerini okumaya başlıyoruz...")
+    
+#     try:
+#             imu.read_imu_data()
+            
+#     except KeyboardInterrupt:
+#         print("Veri okumayı durduruyoruz.")
+#     except Exception as e:
+#         print(f"Bir hata oluştu: {e}")
+
+# if __name__ == "__main__":
+#     main()
