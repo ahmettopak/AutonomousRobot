@@ -5,8 +5,8 @@ BAUD_RATE = 115200
 
 class IMUModule:
     def __init__(self):
-        self.heading = None
-        self.speed = None
+        self.heading = 0
+        self.speed = 0
 
     def read_imu_data(self):
         with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:

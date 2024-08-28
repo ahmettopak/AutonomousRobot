@@ -1,49 +1,11 @@
-<<<<<<< HEAD
-import asyncio
-import websockets
-=======
 from websocket import create_connection, WebSocketException
 
 from websocket import create_connection, WebSocketException
 import time
->>>>>>> a0de270 (Web Socket exception handled)
 
 class WebSocketClient:
     def __init__(self, uri):
         self.uri = uri
-<<<<<<< HEAD
-
-    async def connect(self):
-        self.websocket = await websockets.connect(self.uri)
-
-    async def send_data(self, data):
-        if not hasattr(self, 'websocket'):
-            await self.connect()
-        await self.websocket.send(data)
-        print(f"Veri gönderildi: {data}")
-
-        # Yanıt al (isteğe bağlı)
-        response = await self.websocket.recv()
-        print(f"Sunucudan yanıt alındı: {response}")
-
-    async def close(self):
-        if hasattr(self, 'websocket'):
-            await self.websocket.close()
-            print("WebSocket bağlantısı kapatıldı.")
-
-# # Kullanım örneği
-# async def main():
-#     uri = "ws://192.168.1.58:2006"
-#     client = WebSocketClient(uri)
-
-#     try:
-#         await client.send_data("Merhaba, WebSocket!")
-#     finally:
-#         await client.close()
-
-# # Asenkron fonksiyonu çalıştır
-# asyncio.run(main())
-=======
         self.websocket = None
         self.is_connected = False
 
@@ -115,4 +77,3 @@ class WebSocketClient:
 #     print(f"WebSocket ile ilgili bir hata oluştu: {e}")
 # finally:
 #     client.close()
->>>>>>> a0de270 (Web Socket exception handled)

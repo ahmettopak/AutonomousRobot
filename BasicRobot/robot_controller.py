@@ -1,26 +1,25 @@
-import asyncio
-from gps_module import GPSModule, GPSType
+import threading
+from gps_module import GPSModule , GPSType
 from network_communication import NetworkCommunication
 from robot_navigation import RobotNavigation
 from imu_module import IMUModule
 from web_socket_client import WebSocketClient
 
+import time
 class RobotController:
     gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
+
     uri = "ws://192.168.1.58:2006"
+    
 
     def __init__(self):
         self.gps_module = GPSModule(gps_type=self.gps_type)
         self.imu_module = IMUModule()
         self.client = WebSocketClient(self.uri)
+        
+        # print("Heading:", imu.get_heading())
+        # print("Speed:", imu.get_speed())
         self.network_communication = NetworkCommunication()
-<<<<<<< HEAD
-        self.robot_navigation = RobotNavigation(self.client, self.gps_module, self.imu_module, self.network_communication)
-
-    async def start(self):
-        await self.client.connect()
-        await self.network_communication.start_server()
-=======
         self.robot_navigation = RobotNavigation(self.client , self.gps_module, self.imu_module , self.network_communication)
         self.gps_thread = threading.Thread(target=self.gps_module.read_gps_data, daemon=True)
         self.imu_thread = threading.Thread(target=self.imu_module.read_imu_data, daemon=True)
@@ -34,29 +33,8 @@ class RobotController:
         self.imu_thread.start()
         self.web_socket_send_thread.start()
         self.web_socket_receive_thread.start()
->>>>>>> a0de270 (Web Socket exception handled)
 
-        # Verileri sürekli okumak için asenkron görevler başlatma
-        self.gps_task = asyncio.create_task(self._read_gps_data())
-        self.imu_task = asyncio.create_task(self._read_imu_data())
 
-<<<<<<< HEAD
-    async def stop(self):
-        await self.network_communication.stop_server()
-        await self.network_communication.close()
-        
-        # Görevleri iptal etme ve bekleme
-        self.gps_task.cancel()
-        self.imu_task.cancel()
-        try:
-            await self.gps_task
-        except asyncio.CancelledError:
-            pass
-        try:
-            await self.imu_task
-        except asyncio.CancelledError:
-            pass
-=======
     def stop(self):
 
         # Wait for threads to finish
@@ -115,19 +93,7 @@ class RobotController:
         
     def drive_robot_by_joystick(self ,x, y):
         self.robot_navigation.drive_by_joystick(x, y)
->>>>>>> a0de270 (Web Socket exception handled)
 
-    async def _read_gps_data(self):    
-        await self.gps_module.read_gps_data()
+    def drive_robot_by_speed(self ,left_motor_speed, right_motor_speed):
+        self.robot_navigation.drive_by_speed(left_motor_speed, right_motor_speed)
         
-    async def _read_imu_data(self): 
-        await self.imu_module.read_imu_data()
-
-    async def navigate(self, target_latitude, target_longitude):
-        await self.robot_navigation.navigate_to_target(target_latitude, target_longitude)
-
-    async def drive_robot_by_joystick(self, x, y):
-        await self.robot_navigation.drive_by_joystick(x, y)
-
-    async def drive_robot_by_speed(self, left_motor_speed, right_motor_speed):
-        await self.robot_navigation.drive_by_speed(left_motor_speed, right_motor_speed)

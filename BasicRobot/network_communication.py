@@ -1,7 +1,10 @@
-import asyncio
 from Base.receiver import UDPReceiver
 from Base.sender import UDPSender
 from Base.command_maker import RobotCommandMaker
+
+import time 
+import threading
+
 
 class NetworkCommunication:
     def __init__(self, server_ip='192.168.3.2', server_port=10006):
@@ -9,7 +12,7 @@ class NetworkCommunication:
         self.sender = UDPSender(server_ip=server_ip, server_port=server_port)
         self.command_maker = RobotCommandMaker()
         self.heartbeat_interval = 0.5
-        self.heartbeat_task = None
+        self.heartbeat_thread = None
         self.heartbeat_running = False
 
         self.receiver.on_message_received = self.default_on_message_received
@@ -17,16 +20,17 @@ class NetworkCommunication:
     def default_on_message_received(self, message, addr):
         print(f"Default handler received message: {message} from {addr}")
 
-    async def start_server(self):
+    def start_server(self):
         self.receiver.start()
         self.heartbeat_running = True
-        self.heartbeat_task = asyncio.create_task(self.send_heartbeat())
+        self.heartbeat_thread = threading.Thread(target=self.send_heartbeat, daemon=True)
+        self.heartbeat_thread.start()
 
-    async def stop_server(self):
+    def stop_server(self):
         self.receiver.stop()
         self.heartbeat_running = False
-        if self.heartbeat_task is not None:
-            await self.heartbeat_task
+        if self.heartbeat_thread is not None:
+            self.heartbeat_thread.join()
 
     def send_message(self, message):
         self.sender.send_message(message)
@@ -34,11 +38,11 @@ class NetworkCommunication:
     def send_byte_message(self, message):
         self.sender.send_byte_message(message)
 
-    async def send_heartbeat(self):
+    def send_heartbeat(self):
         while self.heartbeat_running:
             heartbeat_command = self.command_maker.create_heart_beat_command()
             self.send_byte_message(heartbeat_command)
-            await asyncio.sleep(self.heartbeat_interval)  # Asenkron uyuma süresi
+            time.sleep(self.heartbeat_interval)
 
-    async def close(self):
+    def close(self):
         self.sender.close()
