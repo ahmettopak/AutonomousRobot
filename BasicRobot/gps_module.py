@@ -90,7 +90,7 @@ class GPSModule:
             msg = pynmea2.parse(sentence)
             return msg
         except pynmea2.ParseError as e:
-            print(f"Parse error: {e}")
+            #print(f"Parse error: {e}")
             return None
 
     def manual_parse_gga(self , sentence: str) -> Tuple[Optional[float], Optional[float]]:
@@ -118,7 +118,7 @@ class GPSModule:
 
                 return latitude, longitude
             except ValueError as e:
-                print(f"Value error: {e}")
+                #print(f"Value error: {e}")
                 return None, None
         return None, None
     

@@ -10,8 +10,8 @@ class RobotNavigation:
     max_speed = 100
     min_speed = -100
 
-    autonomous_max_speed = 33
-    autonomous_min_speed = -33
+    autonomous_max_speed = 20
+    autonomous_min_speed = -20
     autonomous_finish_tolerance = 0.01  
 
     def __init__(self,web_socket_client: WebSocketClient,  gps_module: GPSModule, imu_module: IMUModule ,network_communication: NetworkCommunication):

@@ -9,8 +9,10 @@ import time
 class RobotController:
     gps_type = GPSType.RADIOLINK  # veya GPSType.GARMIN
 
-    uri = "ws://192.168.1.58:2006"
+    uri = "ws://192.168.3.58:2006"
     
+    robot_gps_id = "ROBOT"
+    rcu_gps_id  = "RCU"
 
     def __init__(self):
         self.gps_module = GPSModule(gps_type=self.gps_type)
@@ -54,7 +56,7 @@ class RobotController:
         while(True):
             current_latitude, current_longitude = self.gps_module.get_current_location()
 
-            data_to_send = f"{current_latitude},{current_longitude},{self.imu_module.get_heading()}"
+            data_to_send = f"{self.robot_gps_id},{current_latitude},{current_longitude},{self.imu_module.get_heading()}"
 
             self.client.send_data(data_to_send)
 
@@ -62,28 +64,26 @@ class RobotController:
 
     def receive_gps_data2robot(self):
         while True:
-            
-            
-            # Veriyi işleme
+             
             try:
                 response = self.client.receive_data()
-            
-                # Byte dizisini string'e dönüştür
                 response_str = response.decode('utf-8')
-                
                 data_parts = response_str.split(',')
                 
-                latitude = float(data_parts[0])
-                longitude = float(data_parts[1])
-                heading = float(data_parts[2])
+                # if len(data_parts) != 3:
+                #     raise ValueError("Data parts length mismatch")
                 
-                print(f"RCU Latitude: {latitude} , Longitude: {longitude} , Heading: {heading}")
-         
-
+                id = data_parts[0]
+                latitude = float(data_parts[1])
+                longitude = float(data_parts[2])
+                heading = float(data_parts[3])
+                
+                print(f"{id} Latitude: {latitude}, Longitude: {longitude}, Heading: {heading}")
             except (IndexError, ValueError) as e:
                 print(f"Error processing data: {e}")
-                
-            time.sleep(0.1)
+                print(f"Response data: {response}")
+
+                time.sleep(0.1)
 
     def navigate(self ,target_latitude, target_longitude):
         self.robot_navigation.navigate_to_target(target_latitude, target_longitude)
