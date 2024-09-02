@@ -198,7 +198,9 @@ class GPSModule:
                         # Special handling for unsupported sentences
                         if line.startswith('$GNGGA'):
                             lat, lon = self.manual_parse_gga(line)
-                            #print(f"Manual GGA - Lat: {lat}, Lon: {lon}")
+                           # print(f"Manual GGA - Lat: {lat}, Lon: {lon}")
+                            self.update_current_location(lat, lon)
+
                         else:
                          #   print(f"Unhandled sentence: {line}")
                             pass
@@ -212,7 +214,7 @@ class GPSModule:
     def update_current_location(self, latitude: float, longitude: float):
         self.current_latitude = latitude
         self.current_longitude = longitude
-        print(f"Updated Location -> Latitude: {self.current_latitude}, Longitude: {self.current_longitude}")
+       # print(f"Updated Location -> Latitude: {self.current_latitude}, Longitude: {self.current_longitude}")
 
     def get_current_location(self) -> Tuple[float, float]:
         return self.current_latitude, self.current_longitude
