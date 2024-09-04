@@ -21,7 +21,7 @@ class NetworkCommunication:
         print(f"Default handler received message: {message} from {addr}")
 
     def start_server(self):
-        self.receiver.start()
+        #self.receiver.start()
         self.heartbeat_running = True
         self.heartbeat_thread = threading.Thread(target=self.send_heartbeat, daemon=True)
         self.heartbeat_thread.start()

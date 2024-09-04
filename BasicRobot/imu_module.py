@@ -19,7 +19,7 @@ class IMUModule:
                             self.heading = float(data[0])
                             self.speed = float(data[1])
                         
-                            print(f"Heading: {self.heading:.2f}°, Speed: {self.speed:.2f} m/s")
+                            #print(f"Heading: {self.heading:.2f}°, Speed: {self.speed:.2f} m/s")
                     except ValueError:
                         print("Hatalı veri formatı:", line)
     
@@ -28,3 +28,4 @@ class IMUModule:
 
     def get_speed(self):
         return self.speed
+    
