@@ -15,7 +15,10 @@ class RobotNavigation:
 
     autonomous_turn_max_speed = 15
     autonomous_turn_min_speed = -15
-    autonomous_finish_tolerance = 0.01  
+
+    autonomous_turn_offset = 25
+
+    autonomous_finish_tolerance = 0.005
 
     def __init__(self, web_socket_client: WebSocketClient, gps_module: GPSModule, imu_module: IMUModule, network_communication: NetworkCommunication):
         self.web_socket_client = web_socket_client
@@ -44,17 +47,33 @@ class RobotNavigation:
 
     def calculate_turn_speed(self, bearing_difference):
         # Yön farkına göre hızları hesapla
-        if bearing_difference > 10:
+        if bearing_difference > self.autonomous_turn_offset:
             left_motor_speed =  self.autonomous_turn_max_speed
             right_motor_speed = self.autonomous_turn_min_speed
-        elif bearing_difference < -10:
+        elif bearing_difference < -self.autonomous_turn_offset:
             left_motor_speed =  self.autonomous_turn_min_speed
             right_motor_speed = self.autonomous_turn_max_speed
         else:
             left_motor_speed = self.autonomous_max_speed
             right_motor_speed = self.autonomous_max_speed
         return left_motor_speed, right_motor_speed
+    
+    def calculate_advanced_turn_speed(self, bearing_difference):
+        # Hızlar arasında geçiş yapmak için bir ölçekleme faktörü kullanın
+        if bearing_difference > self.autonomous_turn_offset:
+            scale = min(bearing_difference / 180, 1)
+            left_motor_speed = self.autonomous_max_speed
+            right_motor_speed = self.autonomous_max_speed * (1 - scale) + self.autonomous_min_speed * scale
+        elif bearing_difference < -self.autonomous_turn_offset:
+            scale = min(abs(bearing_difference) / 180, 1)
+            left_motor_speed = self.autonomous_max_speed * (1 - scale) + self.autonomous_min_speed * scale
+            right_motor_speed = self.autonomous_max_speed
+        else:
+            left_motor_speed = self.autonomous_max_speed
+            right_motor_speed = self.autonomous_max_speed
 
+        return left_motor_speed, right_motor_speed
+        
     def stop_motors(self):
         # Motorları durdur
         self.network_communication.send_byte_message(

@@ -1,7 +1,7 @@
 import serial
 
 SERIAL_PORT = '/dev/ttyUSB0'
-BAUD_RATE = 115200
+BAUD_RATE = 9600
 
 class IMUModule:
     def __init__(self):
