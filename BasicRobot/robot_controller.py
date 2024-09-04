@@ -11,8 +11,13 @@ class RobotController:
 
     uri = "ws://192.168.3.7:2006"
     
-    robot_gps_id = "ROBOT"
-    rcu_gps_id  = "RCU"
+    robot_gps_id = "ROBOT_GPS"
+    rcu_gps_id  = "RCU_GPS"
+    rtl_start_time_id = "RTL_START_TIME"
+    autonomous_stop_id = "AUTONOMOUS_STOP"
+
+    rtl_start_time = 5
+    
 
     rcu_latitude = 0.0
     rcu_longitude = 0.0
@@ -90,25 +95,33 @@ class RobotController:
                     continue
                 
                 response_str = response.decode('utf-8')
+
                 data_parts = response_str.split(',')
                 
-                # Optional: Check if the expected number of parts is present
-                if len(data_parts) != 4:
-                    raise ValueError("Data parts length mismatch")
+                # # Optional: Check if the expected number of parts is present
+                # if len(data_parts) != 4:
+                #     raise ValueError("Data parts length mismatch")
                 
                 id = data_parts[0]
-                latitude = float(data_parts[1])
-                longitude = float(data_parts[2])
-                heading = float(data_parts[3])
+              
 
                 if id == self.rcu_gps_id:
+                    latitude = float(data_parts[1])
+                    longitude = float(data_parts[2])
+                    heading = float(data_parts[3])
                     self.heartbeat_received = True
                     self.first_connection_flag = True
                     self.rcu_latitude = latitude
                     self.rcu_longitude = longitude
 
+                    #self.stop_navigation()
                     print(f"{id} Latitude: {latitude}, Longitude: {longitude}")
 
+                elif id == self.autonomous_stop_id:
+                    self.stop_navigation()
+                elif id == self.rtl_start_time_id:
+                    self.rtl_start_time = int(data_parts[1])
+                    
                 else:
                     print("Unknown GPS ID!")
 
@@ -119,8 +132,6 @@ class RobotController:
             time.sleep(0.1)
 
     def check_connection(self):
-        print("check_connection")
-
         last_heartbeat_time = time.time()
         
         while True:
@@ -129,7 +140,7 @@ class RobotController:
             if self.first_connection_flag:
                 if not self.heartbeat_received:
 
-                    if current_time - last_heartbeat_time >= 30:
+                    if current_time - last_heartbeat_time >= self.rtl_start_time:
                         print("Heartbeat lost for 30 seconds. Starting home return process...")
                     
 
@@ -143,11 +154,14 @@ class RobotController:
     
     def navigate(self ,target_latitude, target_longitude):
         if not self.navigate_started:
+            self.robot_navigation.navigate_status = True
+
             self.robot_navigation.navigate_to_target(target_latitude, target_longitude)
         else:
             print("Navigate already started!")
             
-    def stop_navigation(self ,target_latitude, target_longitude):
-        self.robot_navigation.stop_navigation()
+    def stop_navigation(self):
+        self.robot_navigation.navigate_status = False
+        self.robot_navigation.stop_motors()
         
 

@@ -7,6 +7,7 @@ from imu_module import IMUModule
 from web_socket_client import WebSocketClient
 
 class RobotNavigation:
+    navigate_status = False
     max_speed = 100
     min_speed = -100
 
@@ -65,7 +66,7 @@ class RobotNavigation:
         self.target_latitude = target_latitude
         self.target_longitude = target_longitude
 
-        while True:
+        while self.navigate_status:
             #current_latitude, current_longitude = self.gps_module.get_current_location()
             current_latitude = 0
             current_longitude = 0
@@ -94,7 +95,7 @@ class RobotNavigation:
 
             self.drive_by_speed(left_motor_speed , right_motor_speed)
 
-            print(f"Robot Navigation - Lat: {current_latitude}, Lon: {current_longitude}, Current Bearing: {current_bearing}, Target Bearing: {target_bearing}, Bearing Difference: {bearing_difference} , Distance: {distance}")
+            print(f"Robot Navigation - \n Current Lat: {current_latitude}, Lon: {current_longitude}, Bearing: {current_bearing}\n Target Lat: {target_latitude} , Lon: {target_longitude} , Bearing: {target_bearing}, \n Bearing Difference: {bearing_difference} , Distance: {distance}")
 
             time.sleep(0.1)  # Stabilite için kısa bir uyuma süresi
 
