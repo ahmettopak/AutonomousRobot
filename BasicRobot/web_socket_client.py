@@ -33,13 +33,12 @@ class WebSocketClient:
                 self.websocket.send(data)
             except WebSocketException as e:
                 print(f"Veri gönderilirken bir hata oluştu: {e}")
-                self.close()  # Bağlantıyı kapat
+                self.close()
                 # Hatanın detaylarını anlamak için daha fazla bilgi ekleyin
                 print(f"Hata ayrıntısı: {e}")
             except Exception as e:
                 print(f"Beklenmeyen bir hata oluştu: {e}")
-                self.close()  # Bağlantıyı kapat
-                # Hatanın detaylarını anlamak için daha fazla bilgi ekleyin
+                self.close()
                 print(f"Hata ayrıntısı: {e}")
 
     def receive_data(self):
@@ -62,18 +61,3 @@ class WebSocketClient:
                 print("WebSocket bağlantısı kapatıldı.")
             except WebSocketException as e:
                 print(f"WebSocket bağlantısı kapatılırken bir hata oluştu: {e}")
-
-
-# # Örnek kullanım:
-# try:
-#     client = WebSocketClient("ws://example.com/socket")  # URI'yi doğru olduğundan emin olun
-#     client.send_data("Merhaba, dünya!")
-#     response = client.receive_data()
-#     if response:
-#         print(response)
-#     else:
-#         print("Veri alınamadı.")
-# except WebSocketException as e:
-#     print(f"WebSocket ile ilgili bir hata oluştu: {e}")
-# finally:
-#     client.close()

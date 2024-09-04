@@ -46,7 +46,7 @@ class RobotNavigation:
         return bearing
 
     def calculate_turn_speed(self, bearing_difference):
-        # Yön farkına göre hızları hesapla
+
         if bearing_difference > self.autonomous_turn_offset:
             left_motor_speed =  self.autonomous_turn_max_speed
             right_motor_speed = self.autonomous_turn_min_speed
@@ -58,37 +58,17 @@ class RobotNavigation:
             right_motor_speed = self.autonomous_max_speed
         return left_motor_speed, right_motor_speed
     
-    def calculate_advanced_turn_speed(self, bearing_difference):
-        # Hızlar arasında geçiş yapmak için bir ölçekleme faktörü kullanın
-        if bearing_difference > self.autonomous_turn_offset:
-            scale = min(bearing_difference / 180, 1)
-            left_motor_speed = self.autonomous_max_speed
-            right_motor_speed = self.autonomous_max_speed * (1 - scale) + self.autonomous_min_speed * scale
-        elif bearing_difference < -self.autonomous_turn_offset:
-            scale = min(abs(bearing_difference) / 180, 1)
-            left_motor_speed = self.autonomous_max_speed * (1 - scale) + self.autonomous_min_speed * scale
-            right_motor_speed = self.autonomous_max_speed
-        else:
-            left_motor_speed = self.autonomous_max_speed
-            right_motor_speed = self.autonomous_max_speed
-
-        return left_motor_speed, right_motor_speed
-        
     def stop_motors(self):
-        # Motorları durdur
-        self.network_communication.send_byte_message(
-            self.network_communication.command_maker.create_speed_command(
-                self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, 0))
-        self.network_communication.send_byte_message(
-            self.network_communication.command_maker.create_speed_command(
-                self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, 0))
+        self.drive_by_speed(0,0)
 
     def navigate_to_target(self, target_latitude, target_longitude):
         self.target_latitude = target_latitude
         self.target_longitude = target_longitude
 
         while True:
-            current_latitude, current_longitude = self.gps_module.get_current_location()
+            #current_latitude, current_longitude = self.gps_module.get_current_location()
+            current_latitude = 0
+            current_longitude = 0
             if current_latitude is None or current_longitude is None:
                 print("GPS verisi alınamadı. Bekleniyor...")
                 time.sleep(1)  # GPS verisi gelene kadar bekle
@@ -112,19 +92,7 @@ class RobotNavigation:
             bearing_difference = target_bearing - current_bearing
             left_motor_speed, right_motor_speed = self.calculate_turn_speed(bearing_difference)
 
-            # # Motor hızlarını sınırlandır
-            # left_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, left_motor_speed))
-            # right_motor_speed = max(self.autonomous_min_speed, min(self.autonomous_max_speed, right_motor_speed))
-
-            self.network_communication.send_byte_message(
-                self.network_communication.command_maker.create_speed_command(
-                    self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_motor_speed))
-            
-            time.sleep(0.10)  # Stabilite için kısa bir uyuma süresi
-
-            self.network_communication.send_byte_message(
-                self.network_communication.command_maker.create_speed_command(
-                    self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_motor_speed))
+            self.drive_by_speed(left_motor_speed , right_motor_speed)
 
             print(f"Robot Navigation - Lat: {current_latitude}, Lon: {current_longitude}, Current Bearing: {current_bearing}, Target Bearing: {target_bearing}, Bearing Difference: {bearing_difference} , Distance: {distance}")
 
@@ -139,19 +107,8 @@ class RobotNavigation:
             self.network_communication.command_maker.create_speed_command(
                 self.network_communication.command_maker.LEFT_MOTOR_SPEED_ID, left_speed))
                     
+        time.sleep(0.10)
 
         self.network_communication.send_byte_message(
             self.network_communication.command_maker.create_speed_command(
                 self.network_communication.command_maker.RIGHT_MOTOR_SPEED_ID, right_speed))
-
-    def drive_by_joystick(self, x, y):
-        # Joystick verilerine göre motor hızlarını hesapla
-        left_speed = y + x
-        right_speed = y - x
-
-        # Motor hızlarını sınırlandır
-        left_speed = max(self.min_speed, min(self.max_speed, left_speed))
-        right_speed = max(self.min_speed, min(self.max_speed, right_speed))
-
-        # Motorları kontrol et
-        self.drive_by_speed(left_speed, right_speed)

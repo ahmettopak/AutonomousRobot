@@ -13,7 +13,6 @@ class IMUModule:
             while True:
                 line = ser.readline().decode('ascii', errors='ignore').strip()
                 if line:
-                    # Varsayalım ki veriler `heading,speed` formatında
                     try:
                         data = line.split(',')
                         if len(data) == 2:
@@ -22,7 +21,6 @@ class IMUModule:
                         
                             print(f"Heading: {self.heading:.2f}°, Speed: {self.speed:.2f} m/s")
                     except ValueError:
-                        # Verinin doğru formatta olup olmadığını kontrol et
                         print("Hatalı veri formatı:", line)
     
     def get_heading(self):
@@ -30,21 +28,3 @@ class IMUModule:
 
     def get_speed(self):
         return self.speed
-    
-
-
-# def main():
-#     imu = IMUModule()
-
-#     print("IMU verilerini okumaya başlıyoruz...")
-    
-#     try:
-#             imu.read_imu_data()
-            
-#     except KeyboardInterrupt:
-#         print("Veri okumayı durduruyoruz.")
-#     except Exception as e:
-#         print(f"Bir hata oluştu: {e}")
-
-# if __name__ == "__main__":
-#     main()

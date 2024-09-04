@@ -14,13 +14,15 @@ class RobotController:
     robot_gps_id = "ROBOT"
     rcu_gps_id  = "RCU"
 
+    rcu_latitude = 0
+    rcu_longitude = 0
+
     def __init__(self):
         self.gps_module = GPSModule(gps_type=self.gps_type)
         self.imu_module = IMUModule()
         self.client = WebSocketClient(self.uri)
         
-        # print("Heading:", imu.get_heading())
-        # print("Speed:", imu.get_speed())
+        
         self.network_communication = NetworkCommunication()
         self.robot_navigation = RobotNavigation(self.client , self.gps_module, self.imu_module , self.network_communication)
         self.gps_thread = threading.Thread(target=self.gps_module.read_gps_data, daemon=True)
@@ -60,7 +62,7 @@ class RobotController:
 
             self.client.send_data(data_to_send)
 
-            time.sleep(1)
+            time.sleep(2)
 
     def receive_gps_data2robot(self):
         while True:
@@ -77,8 +79,16 @@ class RobotController:
                 latitude = float(data_parts[1])
                 longitude = float(data_parts[2])
                 heading = float(data_parts[3])
-                
+
+                if(id == self.rcu_gps_id):
+                    
+                    self.rcu_latitude = latitude
+                    self.rcu_longitude = longitude
+
+                    print(f"{id} Latitude: {latitude}, Longitude: {longitude}")
+
                 print(f"{id} Latitude: {latitude}, Longitude: {longitude}, Heading: {heading}")
+                
             except (IndexError, ValueError) as e:
                 print(f"Error processing data: {e}")
                 print(f"Response data: {response}")
@@ -91,9 +101,4 @@ class RobotController:
     def stop_navigation(self ,target_latitude, target_longitude):
         self.robot_navigation.stop_navigation()
         
-    def drive_robot_by_joystick(self ,x, y):
-        self.robot_navigation.drive_by_joystick(x, y)
 
-    def drive_robot_by_speed(self ,left_motor_speed, right_motor_speed):
-        self.robot_navigation.drive_by_speed(left_motor_speed, right_motor_speed)
-        
