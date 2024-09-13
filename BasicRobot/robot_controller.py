@@ -9,7 +9,7 @@ import time
 class RobotController:
     gps_type = GPSType.RADIOLINK  
 
-    uri = "ws://192.168.3.7:2006"
+    uri = "ws://192.168.3.30:2006"
     
     robot_gps_id = "ROBOT_GPS"
     rcu_gps_id  = "RCU_GPS"
@@ -31,6 +31,13 @@ class RobotController:
         self.imu_module = IMUModule()
         self.client = WebSocketClient(self.uri)
         
+        self.path = []  # Geçilen lokasyonları saklamak için liste
+        self.last_latitude = None
+        self.last_longitude = None
+        self.recording_interval = 1  # Konum güncelleme aralığı (saniye cinsinden)
+        self.distance_threshold = 3  # Mesafe eşiği (metre cinsinden)
+        self.is_recording_path = False
+        self.is_returning = False
         
         self.network_communication = NetworkCommunication()
         self.robot_navigation = RobotNavigation(self.client , self.gps_module, self.imu_module , self.network_communication)
@@ -69,7 +76,7 @@ class RobotController:
     def send_gps_data2robot(self):
         while(True):
             current_latitude, current_longitude = self.gps_module.get_current_location()
-            current_latitude, current_longitude = 0,0
+            #current_latitude, current_longitude = 0,0
 
             if current_latitude is None or current_longitude is None:
                 print("GPS verisi alınamadı. Bekleniyor...")
@@ -138,6 +145,7 @@ class RobotController:
             current_time = time.time()
 
             if self.first_connection_flag:
+
                 if not self.heartbeat_received:
 
                     if current_time - last_heartbeat_time >= self.rtl_start_time:
@@ -145,6 +153,9 @@ class RobotController:
                     
 
                         self.navigate(self.rcu_latitude , self.rcu_longitude)
+#                        self.navigate(self.rcu_latitude , self.rcu_longitude)
+
+                        self.navigate_to_home()
                 else:
                     last_heartbeat_time = current_time
                     self.heartbeat_received = False
@@ -160,8 +171,34 @@ class RobotController:
         else:
             print("Navigate already started!")
             
+
+    def navigate_to_home(self):
+        if not self.navigate_started:
+            self.robot_navigation.navigate_status = True
+
+            self.robot_navigation.follow_path(self.path.reverse())
+        else:
+            print("follow_path Navigate already started!")
+            
     def stop_navigation(self):
         self.robot_navigation.navigate_status = False
         self.robot_navigation.stop_motors()
         
 
+
+    def update_path(self):
+        current_latitude, current_longitude = self.gps_module.get_current_location()
+
+        if self.last_latitude is None or self.last_longitude is None:
+            # İlk konum, yolu başlatma
+            self.last_latitude = current_latitude
+            self.last_longitude = current_longitude
+            self.path.append((self.last_latitude, self.last_longitude))
+            print(f"İlk konum kaydedildi: ({self.last_latitude}, {self.last_longitude})")
+        else:
+            distance = self.haversine_distance(self.last_latitude, self.last_longitude, current_latitude, current_longitude)
+            if distance >= self.distance_threshold:
+                self.path.append((current_latitude, current_longitude))
+                print(f"Yeni konum kaydedildi: ({current_latitude}, {current_longitude})")
+                self.last_latitude = current_latitude
+                self.last_longitude = current_longitude

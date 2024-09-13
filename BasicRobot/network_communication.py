@@ -7,7 +7,7 @@ import threading
 
 
 class NetworkCommunication:
-    def __init__(self, server_ip='192.168.3.2', server_port=10006):
+    def __init__(self, server_ip='192.168.3.31', server_port=10008):
         self.receiver = UDPReceiver(port=server_port)
         self.sender = UDPSender(server_ip=server_ip, server_port=server_port)
         self.command_maker = RobotCommandMaker()
